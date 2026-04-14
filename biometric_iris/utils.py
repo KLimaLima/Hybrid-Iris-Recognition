@@ -178,20 +178,27 @@ def find_best_match(dataset_folder, query_image):
     return best_match_id, best_similarity
 
 # Function to display segmentation and normalization process details
-def show_details(image):
+def show_details(image, x, y, r, x_pupil, y_iris, r_iris):
     src = gammaCorrection(image)
     newImage = src.copy()
     img = preprocess(image)
     img1 = preprocess(newImage)
 
-    x, y, r = find_pupil_hough(img1)
-    x_iris, y_iris, r_iris = find_iris_hough(img)
+    # x, y, r = find_pupil_hough(img1)
+    # x_iris, y_iris, r_iris = find_iris_hough(img)
 
-    iris = unravel_iris(image, x, y, r, x_iris, y_iris, r_iris)
+    x = int(x)
+    y = int(y)
+    r = int(r)
+    x_pupil = int(x_pupil)
+    y_iris = int(y_iris)
+    r_iris = int(r_iris)
+
+    iris = unravel_iris(image, x, y, r, x_pupil, y_iris, r_iris)
     cv2.circle(image, (x, y), r, (255, 0, 0), 3)
     cv2.circle(image, (x, y), 2, (255, 0, 0), 2)
-    cv2.circle(image, (x_iris, y_iris), r_iris, (0, 255, 0), 3)
-    cv2.circle(image, (x_iris, y_iris), 2, (0, 255, 0), 2)
+    cv2.circle(image, (x_pupil, y_iris), r_iris, (0, 255, 0), 3)
+    cv2.circle(image, (x_pupil, y_iris), 2, (0, 255, 0), 2)
 
     f, axes = plt.subplots(2, 2, figsize=(8, 8))
     axes[0, 0].imshow(image, cmap=plt.cm.gray)
@@ -206,6 +213,6 @@ def show_details(image):
     axes[1, 1].set_title('Mask code')
 
     cv2.circle(image, (x, y), r, (255, 255, 0), 2)
-    cv2.circle(image, (x_iris, y_iris), r_iris, (0, 255, 0), 2)
+    cv2.circle(image, (x_pupil, y_iris), r_iris, (0, 255, 0), 2)
 
     plt.show()
