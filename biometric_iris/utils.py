@@ -207,8 +207,8 @@ def show_details(image, x, y, r, x_pupil, y_iris, r_iris):
     axes[0, 1].set_title('Normalization process')
 
     code, mask = iris_encode(iris)
-    axes[1, 0].imshow(iris, cmap=plt.cm.gray)
-    axes[1, 0].set_title('Normalization process')
+    axes[1, 0].imshow(code, cmap=plt.cm.gray)
+    axes[1, 0].set_title('Iris code')
     axes[1, 1].imshow(mask, cmap=plt.cm.gray, interpolation='none')
     axes[1, 1].set_title('Mask code')
 
