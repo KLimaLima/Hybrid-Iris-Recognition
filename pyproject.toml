@@ -10,5 +10,7 @@ dependencies = [
     "numpy>=2.4.4",
     "opencv-python>=4.13.0.92",
     "pandas>=3.0.2",
+    "pydot>=4.0.1",
     "scikit-image>=0.26.0",
+    "tensorflow>=2.21.0",
 ]

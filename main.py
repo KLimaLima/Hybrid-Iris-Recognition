@@ -31,7 +31,7 @@ def get_coords(dataframe):
 def show_iris_code(dataframe):
     dataframe = pd.read_csv("db/CASIA-Iris-Thousand.csv")
 
-    selected_path = dataframe['NewPath'].loc[dataframe.index[11070]]
+    selected_path = dataframe['NewPath'].loc[dataframe.index[11070]] # 11070
 
     selected_path = f'{PATH_DB}{selected_path}'
     split_xtension = selected_path.split('.')
@@ -59,6 +59,8 @@ def show_iris_code(dataframe):
                     data_json['predictions'][1]['x'],
                     data_json['predictions'][1]['y'],
                     data_json['predictions'][1]['width'] / 2)
+    
+    print(points_iris)
 
     # Define scales
     scales = np.logspace(0, 10, num=50)
