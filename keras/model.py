@@ -1,46 +1,37 @@
-import numpy as np
 import tensorflow as tf
+from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout
+from tensorflow.keras.models import Model
 from tensorflow import keras
-from keras import layers
 
-# reference - https://www.tensorflow.org/guide/keras/functional_api#manipulate_complex_graph_topologies
+# --- Image branch (no CNN, just flatten) ---
+image_input = Input(shape=(150, 300), name="image_input")  # adjust size
 
-num_tags = 12  # Number of unique issue tags
-num_words = 10000  # Size of vocabulary obtained when preprocessing text data
-num_departments = 4  # Number of departments for predictions
+x = Flatten()(image_input)
+x = Dense(256, activation='relu')(x)
+x = Dense(128, activation='relu')(x)
 
-title_input = keras.Input(
-    shape=(None,), name="title"
-)  # Variable-length sequence of ints
+# --- Structured data branch ---
+numeric_input = Input(shape=(10,), name="numeric_input")  # adjust feature size
 
-body_input = keras.Input(shape=(None,), name="body")  # Variable-length sequence of ints
+y = Dense(64, activation='relu')(numeric_input)
+y = Dense(32, activation='relu')(y)
 
-tags_input = keras.Input(
-    shape=(num_tags,), name="tags"
-)  # Binary vectors of size `num_tags`
+# --- Concatenate ---
+combined = Concatenate()([x, y])
 
-# Embed each word in the title into a 64-dimensional vector
-title_features = layers.Embedding(num_words, 64)(title_input)
-# Embed each word in the text into a 64-dimensional vector
-body_features = layers.Embedding(num_words, 64)(body_input)
+z = Dense(64, activation='relu')(combined)
+z = Dropout(0.5)(z)
+output = Dense(1, activation='sigmoid')(z)  # change depending on task
 
-# Reduce sequence of embedded words in the title into a single 128-dimensional vector
-title_features = layers.LSTM(128)(title_features)
-# Reduce sequence of embedded words in the body into a single 32-dimensional vector
-body_features = layers.LSTM(32)(body_features)
+# --- Model ---
+model = Model(inputs=[image_input, numeric_input], outputs=output)
 
-# Merge all available features into a single large vector via concatenation
-x = layers.concatenate([title_features, body_features, tags_input])
+keras.utils.plot_model(model, "keras/model.png", show_shapes=True)
 
-# Stick a logistic regression for priority prediction on top of the features
-priority_pred = layers.Dense(1, name="priority")(x)
-# Stick a department classifier on top of the features
-department_pred = layers.Dense(num_departments, name="department")(x)
-
-# Instantiate an end-to-end model predicting both priority and department
-model = keras.Model(
-    inputs=[title_input, body_input, tags_input],
-    outputs=[priority_pred, department_pred],
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
 )
 
-keras.utils.plot_model(model, "keras/plot_model.png", show_shapes=True)
+model.summary()
