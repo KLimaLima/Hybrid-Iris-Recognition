@@ -2,7 +2,7 @@ from biometric_iris import utils as iris
 from env import PATH_DB
 from preprocess import segmentation
 from roboflow import inference
-import fractal
+from fractal import fractal, utils
 
 import cv2
 import pandas as pd
@@ -36,32 +36,51 @@ def main():
     # my_dict = npz_file['fractal_dimension'].item()
     # print(type(my_dict['box_counting_original']['boxes'])) # numpy array
 
-def get_data_np(img_path: str):
+def extract_save2npz(img_path: str):
 
+    # get coords from JSON
     split_xtenstion = img_path.split('.')
     path_json = f'{split_xtenstion[0]}.json'
-
-    img_ori = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
     with open(path_json, "r") as j:
         data_json = json.load(j)
 
-    code_iris = iris.unravel_iris(img_ori,
-                    data_json['predictions'][0]['x'],
-                    data_json['predictions'][0]['y'],
-                    data_json['predictions'][0]['width'] / 2,
-                    data_json['predictions'][1]['x'],
-                    data_json['predictions'][1]['y'],
-                    data_json['predictions'][1]['width'] / 2)
+    pupil = {'x': data_json['predictions'][0]['x'],
+                  'y': data_json['predictions'][0]['y'],
+                  'r': data_json['predictions'][0]['width'] / 2}
     
-    dict_fractal = calc_fractal(code_iris)
+    limbus = {'x': data_json['predictions'][1]['x'],
+                  'y': data_json['predictions'][1]['y'],
+                  'r': data_json['predictions'][1]['width'] / 2}
+    
+    # ORIGINAL get code and fractal
+    img_ori = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
-    # np_fractal = dict2numpy(dict_fractal)
+    code_original = iris.unravel_iris(img_ori,
+                                  limbus['x'], limbus['y'], limbus['r'],
+                                  pupil['x'], pupil['y'], pupil['r'])
+    
+    fd_original = calc_fractal(code_original)
 
+    # HIST EQ get code and fractal
+    img_hist_eq = cv2.equalizeHist(img_ori)
+
+    code_hist_eq = iris.unravel_iris(img_hist_eq,
+                                  limbus['x'], limbus['y'], limbus['r'],
+                                  pupil['x'], pupil['y'], pupil['r'])
+    
+    fd_hist_eq = calc_fractal(code_hist_eq)
+
+    # save everything to npz file
     np.savez_compressed(f'{split_xtenstion[0]}.npz',
+                        pupil= pupil,
+                        limbus= limbus,
                         img_original= img_ori,
-                        code_iris= code_iris,
-                        fractal_dimension= dict_fractal)
+                        code_original= code_original,
+                        fd_original= fd_original,
+                        img_hist_eq= img_hist_eq,
+                        code_hist_eq= code_hist_eq,
+                        fd_hist_eq= fd_hist_eq)
 
 def get_coords(dataframe):
 
@@ -98,9 +117,9 @@ def show(path_img: str):
     
     calc_fractal(code_iris, True)
 
-    my_hist_eq = cv2.equalizeHist(img)
+    img_hist_eq = cv2.equalizeHist(img)
 
-    code_iris_histeq = iris.unravel_iris(my_hist_eq,
+    code_iris_histeq = iris.unravel_iris(img_hist_eq,
                                   limbus_data['x'], limbus_data['y'], limbus_data['r'],
                                   pupil_data['x'], pupil_data['y'], pupil_data['r'])
     
@@ -113,13 +132,18 @@ def show(path_img: str):
     cv2.circle(img, (int(pupil_data['x']), int(pupil_data['y'])), int(pupil_data['r']), (0, 255, 0), 3)
     cv2.circle(img, (int(pupil_data['x']), int(pupil_data['y'])), 2, (0, 255, 0), 2)
 
+    cv2.circle(img_hist_eq, (int(limbus_data['x']), int(limbus_data['y'])), int(limbus_data['r']), (255, 0, 0), 3)
+    cv2.circle(img_hist_eq, (int(limbus_data['x']), int(limbus_data['y'])), 2, (255, 0, 0), 2)
+    cv2.circle(img_hist_eq, (int(pupil_data['x']), int(pupil_data['y'])), int(pupil_data['r']), (0, 255, 0), 3)
+    cv2.circle(img_hist_eq, (int(pupil_data['x']), int(pupil_data['y'])), 2, (0, 255, 0), 2)
+
     f, axes = plt.subplots(2, 2, figsize=(8, 8))
     axes[0, 0].imshow(img, cmap=plt.cm.gray)
     axes[0, 0].set_title('Original Iris')
     axes[0, 1].imshow(code_iris, cmap=plt.cm.gray)
     axes[0, 1].set_title('Original Code')
 
-    axes[1, 0].imshow(my_hist_eq, cmap=plt.cm.gray)
+    axes[1, 0].imshow(img_hist_eq, cmap=plt.cm.gray)
     axes[1, 0].set_title('Hist EQ Iris')
     axes[1, 1].imshow(code_iris_histeq, cmap=plt.cm.gray)
     axes[1, 1].set_title('Hist EQ Code')
@@ -130,36 +154,26 @@ def calc_fractal(code_iris, show= False):
 
     scales=np.logspace(0, 10, num=50)
     # oversample_rate=10
-    res={}
-    for method in ["original"]:
-        r=fractal.box_counting(code_iris,scales,method=method, return_boxes=True)
-        res[f"box_counting_{method}"]=r
+    res = {}
 
-    r=fractal.temporal_sampling(code_iris, min_step=1, max_step=2, return_boxes=True)
-    res["temporal_sampling"]=r    
+    r = fractal.box_counting(code_iris, scales, method='original', return_boxes=True)
+    res["box_counting_original"] = r
 
-    scales=0.007*np.exp(np.linspace(np.log(1),np.log(3),5))
-    r=fractal.corr_sum(code_iris, scales, return_boxes=True)
-    res["corr_sum"]=r
+    r = fractal.temporal_sampling(code_iris, min_step=1, max_step=2, return_boxes=True)
+    res["temporal_sampling"] = r    
 
-    r=fractal.corr_sum_takens(code_iris)
-    res["corr_sum_takens"]=r
+    scales = 0.007*np.exp(np.linspace(np.log(1),np.log(3),5))
+    r = fractal.corr_sum(code_iris, scales, return_boxes=True)
+    res["corr_sum"] = r
+
+    r = fractal.corr_sum_takens(code_iris)
+    res["corr_sum_takens"] = r
 
     if show:
         for key,value in res.items():
             print(f'{key}: {value}')
 
     return res
-
-def dict2numpy(my_data: dict):
-
-    res = my_data.items()
-
-    data = list(res)
-
-    np_array = np.array(data)
-
-    return np_array
 
 if __name__ == "__main__":
 
