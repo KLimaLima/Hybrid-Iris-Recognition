@@ -22,7 +22,7 @@ def main():
     #     path_to_process = f'{PATH_DB}{path_to_image}'
     #     print(f'Processing {path_to_process}')
 
-    selected_path = df['NewPath'].loc[df.index[290]] # 11070
+    selected_path = df['NewPath'].loc[df.index[11070]] # 11070
 
     selected_path = f'{PATH_DB}{selected_path}'
     
@@ -72,35 +72,48 @@ def extract_save2npz(img_path: str):
 
     fd_hist_eq = calc_fractal(code_hist_eq)
 
+    gabor_magnitude = {}
+    gabor_phase ={}
+    
+    for theta in [0, math.pi/4, math.pi/2, 3*math.pi/4,]:
+
+        my_gabor, magnitude, phase = gabor_v2(code_hist_eq, 0)
+
+        gabor_magnitude[theta] = magnitude
+        gabor_phase[theta] = phase
+
+        f, axes = plt.subplots(2, 2, figsize=(8, 8))
+        axes[0, 0].imshow(code_hist_eq, cmap=plt.cm.gray)
+        axes[0, 0].set_title('Code HIST EQ')
+        # axes[0, 1].imshow(filtered, cmap=plt.cm.gray)
+        # axes[0, 1].set_title('Gabor HIST EQ')
+
+        axes[1, 0].imshow(gabor_magnitude, cmap=plt.cm.gray)
+        axes[1, 0].set_title('Gabor Magnitude')
+        axes[1, 1].imshow(phase, cmap=plt.cm.gray)
+        axes[1, 1].set_title('Gabor Phase')
+
+        # fd_gb_phase = calc_fractal(phase, True) # calc fd with phase gets very reliable value
+
+        plt.show()
+        cv2.waitKey(0)
+
     # save everything to npz file
     np.savez_compressed(f'{split_xtenstion[0]}.npz',
+                        
                         pupil= pupil,
                         limbus= limbus,
+
                         img_original= img_ori,
                         code_original= code_original,
                         fd_original= fd_original,
+
                         img_hist_eq= img_hist_eq,
                         code_hist_eq= code_hist_eq,
-                        fd_hist_eq= fd_hist_eq)
-    
-    my_gabor, mag, phase = gabor_phase(code_hist_eq, 0)
-
-    f, axes = plt.subplots(2, 2, figsize=(8, 8))
-    axes[0, 0].imshow(code_hist_eq, cmap=plt.cm.gray)
-    axes[0, 0].set_title('Code HIST EQ')
-    # axes[0, 1].imshow(filtered, cmap=plt.cm.gray)
-    # axes[0, 1].set_title('Gabor HIST EQ')
-
-    axes[1, 0].imshow(mag, cmap=plt.cm.gray)
-    axes[1, 0].set_title('Gabor Magnitude')
-    axes[1, 1].imshow(phase, cmap=plt.cm.gray)
-    axes[1, 1].set_title('Gabor Phase')
-
-    fd_gb_phase = calc_fractal(phase, True)
-
-    plt.show()
-    cv2.waitKey(0)
-
+                        fd_hist_eq= fd_hist_eq,
+                        
+                        gabor_magnitude= gabor_magnitude,
+                        gabor_phase= gabor_phase)
 
 #############################################################
 
@@ -111,7 +124,7 @@ def extract_save2npz(img_path: str):
 # image = np.zeros((64, 64))
 # image[32, 32] = 1          # a delta impulse image to visualize the filtering kernel
 
-def gabor_phase(image, theta_in_degree, wavelength = 10, gamma = 0.5):
+def gabor_v2(image, theta_in_degree, wavelength = 10, gamma = 0.5):
 
     orientation = theta_in_degree / 180 * math.pi    # in radian, and seems to run in opposite direction
     sigma = 0.5 * wavelength * 1         # 1 == SpatialFrequencyBandwidth
