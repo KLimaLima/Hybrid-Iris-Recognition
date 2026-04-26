@@ -88,10 +88,10 @@ def extract_save2npz(img_path: str):
         # axes[0, 1].imshow(filtered, cmap=plt.cm.gray)
         # axes[0, 1].set_title('Gabor HIST EQ')
 
-        axes[1, 0].imshow(gabor_magnitude, cmap=plt.cm.gray)
-        axes[1, 0].set_title('Gabor Magnitude')
-        axes[1, 1].imshow(phase, cmap=plt.cm.gray)
-        axes[1, 1].set_title('Gabor Phase')
+        axes[1, 0].imshow(gabor_magnitude[theta], cmap=plt.cm.gray)
+        axes[1, 0].set_title(f'Gabor Magnitude {theta}')
+        axes[1, 1].imshow(gabor_phase[theta], cmap=plt.cm.gray)
+        axes[1, 1].set_title(f'Gabor Phase {theta}')
 
         # fd_gb_phase = calc_fractal(phase, True) # calc fd with phase gets very reliable value
 
@@ -126,7 +126,7 @@ def extract_save2npz(img_path: str):
 
 def gabor_v2(image, theta_in_degree, wavelength = 10, gamma = 0.5):
 
-    orientation = theta_in_degree / 180 * math.pi    # in radian, and seems to run in opposite direction
+    orientation = -theta_in_degree / 180 * math.pi    # in radian, and seems to run in opposite direction
     sigma = 0.5 * wavelength * 1         # 1 == SpatialFrequencyBandwidth
     # gamma = 0.5                          # SpatialAspectRatio
     shape = 1 + 2 * math.ceil(4 * sigma) # smaller cutoff is possible for speed
