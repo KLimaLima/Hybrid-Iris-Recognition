@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import time
+import math
 
 def main():
     print("Hello from hybrid-iris-recognition!")
@@ -21,20 +22,20 @@ def main():
     #     path_to_process = f'{PATH_DB}{path_to_image}'
     #     print(f'Processing {path_to_process}')
 
-    selected_path = df['NewPath'].loc[df.index[11070]] # 11070
+    selected_path = df['NewPath'].loc[df.index[290]] # 11070
 
     selected_path = f'{PATH_DB}{selected_path}'
     
-    show(selected_path)
+    # show(selected_path)
 
-    # get_data_np(selected_path)
+    extract_save2npz(selected_path)
 
     # npz_path = f'{selected_path.split('.')[0]}.npz'
     # npz_file = np.load(npz_path, allow_pickle=True)
     # cv2.imshow('image from npz file', npz_file['img_original'])
     # cv2.waitKey(100)
     # my_dict = npz_file['fractal_dimension'].item()
-    # print(type(my_dict['box_counting_original']['boxes'])) # numpy array
+    # print(my_dict['box_counting_original']['boxes'].size) # numpy array - size 100
 
 def extract_save2npz(img_path: str):
 
@@ -68,7 +69,7 @@ def extract_save2npz(img_path: str):
     code_hist_eq = iris.unravel_iris(img_hist_eq,
                                   limbus['x'], limbus['y'], limbus['r'],
                                   pupil['x'], pupil['y'], pupil['r'])
-    
+
     fd_hist_eq = calc_fractal(code_hist_eq)
 
     # save everything to npz file
@@ -81,6 +82,52 @@ def extract_save2npz(img_path: str):
                         img_hist_eq= img_hist_eq,
                         code_hist_eq= code_hist_eq,
                         fd_hist_eq= fd_hist_eq)
+    
+    my_gabor, mag, phase = gabor_phase(code_hist_eq, 0)
+
+    f, axes = plt.subplots(2, 2, figsize=(8, 8))
+    axes[0, 0].imshow(code_hist_eq, cmap=plt.cm.gray)
+    axes[0, 0].set_title('Code HIST EQ')
+    # axes[0, 1].imshow(filtered, cmap=plt.cm.gray)
+    # axes[0, 1].set_title('Gabor HIST EQ')
+
+    axes[1, 0].imshow(mag, cmap=plt.cm.gray)
+    axes[1, 0].set_title('Gabor Magnitude')
+    axes[1, 1].imshow(phase, cmap=plt.cm.gray)
+    axes[1, 1].set_title('Gabor Phase')
+
+    fd_gb_phase = calc_fractal(phase, True)
+
+    plt.show()
+    cv2.waitKey(0)
+
+
+#############################################################
+
+# Source - https://stackoverflow.com/a/61332913
+# Posted by Cris Luengo, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-04-26, License - CC BY-SA 4.0
+
+# image = np.zeros((64, 64))
+# image[32, 32] = 1          # a delta impulse image to visualize the filtering kernel
+
+def gabor_phase(image, theta_in_degree, wavelength = 10, gamma = 0.5):
+
+    orientation = theta_in_degree / 180 * math.pi    # in radian, and seems to run in opposite direction
+    sigma = 0.5 * wavelength * 1         # 1 == SpatialFrequencyBandwidth
+    # gamma = 0.5                          # SpatialAspectRatio
+    shape = 1 + 2 * math.ceil(4 * sigma) # smaller cutoff is possible for speed
+    shape = (shape, shape)
+    gabor_filter_real = cv2.getGaborKernel(shape, sigma, orientation, wavelength, gamma, psi=0)
+    gabor_filter_imag = cv2.getGaborKernel(shape, sigma, orientation, wavelength, gamma, psi=math.pi/2)
+
+    gabor = cv2.filter2D(image, -1, gabor_filter_real) + 1j * cv2.filter2D(image, -1, gabor_filter_imag)
+    mag = np.abs(gabor)
+    phase = np.angle(gabor)
+
+    return gabor, mag, phase
+
+#############################################################
 
 def get_coords(dataframe):
 
