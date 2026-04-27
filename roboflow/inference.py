@@ -39,6 +39,6 @@ def get_coords_curl(path_img):
 
         json.dump(response.json(), f)
 
-    time.sleep(7)
+    time.sleep(2)
 
     return True
