@@ -3,6 +3,7 @@ from env import PATH_DB
 from preprocess import segmentation
 from roboflow import inference
 from fractal import fractal, utils
+from my_keras import model
 
 import cv2
 import pandas as pd
@@ -21,7 +22,7 @@ def main():
     # Posted by Devesh
     # Retrieved 2026-04-27, License - CC BY-SA 4.0
 
-    df = df.query("Index >= 10500") # 1380
+    df = df.query("Index <= 500") # >= 10500
 
     # Shuffle your dataset 
     shuffle_df = df.sample(frac=1)
@@ -33,6 +34,18 @@ def main():
     train_set = shuffle_df[:train_size]
     test_set = shuffle_df[train_size:]
 
+    (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y = prepare_input(train_set)
+
+    unique, counts = np.unique(y, return_counts=True)
+    # print(y.size)
+    from tensorflow.keras.utils import to_categorical
+    labels = to_categorical(y, num_classes=y.size)
+    # print(labels)
+    print(y.dtype)
+    # exit()
+
+    model.make_model((150, 300), (4,), y.size,
+                     X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, labels)
 
     # temporary
     # df = df.query("Index >= 10760") # 1380
@@ -43,16 +56,16 @@ def main():
     #     print(f'Processing {path_to_process}')
     #     extract_save2npz(path_to_process)
 
-    selected_path = df['NewPath'].loc[df.index[11070]] # 11070
-    selected_path = f'{PATH_DB}{selected_path}'
+    # selected_path = df['NewPath'].loc[df.index[11070]] # 11070
+    # selected_path = f'{PATH_DB}{selected_path}'
     # extract_save2npz(selected_path)
     
-    npz_path = f'{selected_path.split('.')[0]}.npz'
-    npz_file = np.load(npz_path, allow_pickle=True)
+    # npz_path = f'{selected_path.split('.')[0]}.npz'
+    # npz_file = np.load(npz_path, allow_pickle=True)
 
-    dict_fd = npz_file['fd_hist_eq'].item()
-    dict_gabor_phase = npz_file['gabor_phase'].item()
-    dict_gabor_magnitude = npz_file['gabor_magnitude'].item()
+    # dict_fd = npz_file['fd_hist_eq'].item()
+    # dict_gabor_phase = npz_file['gabor_phase'].item()
+    # dict_gabor_magnitude = npz_file['gabor_magnitude'].item()
 
     # print(dict_fd.keys()) # numpy float64
 
@@ -60,36 +73,57 @@ def main():
     # for val in dict_gabor_phase.values():
     #     print(val) # numpy array
 
-    temp = list(dict_gabor_phase.values())
-    print(temp[0])
-
 def prepare_input(df):
-
-  X_fd = []
-  X_gabor1, X_gabor2, X_gabor3, X_gabor4 = [],[],[],[]
-  y = []
-
-  for npz_path in df['NPZ_Path']:
-    npz_file = np.load(npz_path, allow_pickle=True)
-
-    dict_gabor_phase = npz_file['gabor_phase'].item()
-    gabor_phase_list = list(dict_gabor_phase.values())
-    X_gabor1.append(gabor_phase_list[0])
-    X_gabor2.append(gabor_phase_list[1])
-    X_gabor3.append(gabor_phase_list[2])
-    X_gabor4.append(gabor_phase_list[3])
-
-    dict_fd = npz_file['fd_hist_eq'].item()
-    fd_tuple = tuple(list(dict_fd.values()))
-    X_fd.append(fd_tuple)
     
-    y.append(f'{npz_file['person_num']}-{npz_file['lr']}')
+    X_fd = []
+    X_gabor1, X_gabor2, X_gabor3, X_gabor4 = [],[],[],[]
+    y = []
+    
+    for npz_path in df['NPZ_Path']:
+        
+        npz_file = np.load(npz_path, allow_pickle=True)
 
-  X_gabor1, X_gabor2, X_gabor3, X_gabor4 = np.array(X_gabor1), np.array(X_gabor2), np.array(X_gabor3), np.array(X_gabor4)
-  X_fd = np.array(X_fd)
-  y = np.array(y)
+        dict_gabor_phase = npz_file['gabor_phase'].item()
+        gabor_phase_list = list(dict_gabor_phase.values())
+        X_gabor1.append(gabor_phase_list[0])
+        X_gabor2.append(gabor_phase_list[1])
+        X_gabor3.append(gabor_phase_list[2])
+        X_gabor4.append(gabor_phase_list[3])
 
-  return (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y
+        dict_fd = npz_file['fd_hist_eq'].item()
+        temp_list = []
+        temp_list.append(dict_fd['box_counting_original']['fd'])
+        temp_list.append(dict_fd['temporal_sampling']['fd'])
+        temp_list.append(dict_fd['corr_sum']['fd'])
+        temp_list.append(dict_fd['corr_sum_takens'])
+        fd_tuple = tuple(temp_list)
+        X_fd.append(fd_tuple)
+        
+        y.append(f'{npz_file['person_num']}-{npz_file['lr']}')
+
+    # Source - https://stackoverflow.com/a/70051602
+    # Posted by j1-lee, modified by community. See post 'Timeline' for change history
+    # Retrieved 2026-04-28, License - CC BY-SA 4.0
+
+    d = {x: i for i, x in enumerate(set(y))}
+    lst_new = [d[x] for x in y]
+    # print(lst_new)
+    y = lst_new
+
+    X_gabor1, X_gabor2, X_gabor3, X_gabor4 = np.array(X_gabor1), np.array(X_gabor2), np.array(X_gabor3), np.array(X_gabor4)
+    X_fd = np.array(X_fd)
+    # print(type(y[0]))
+    y = np.array(y, dtype=np.float32)
+
+    # print(X_gabor1.dtype)
+    # print(X_gabor2.dtype)
+    # print(X_gabor3.dtype)
+    # print(X_gabor4.dtype)
+    # print(fd_tuple)
+    # print(y.dtype)
+    # exit()
+
+    return (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y
 
 def extract_save2npz(img_path: str):
 
