@@ -25,29 +25,29 @@ def use_model():
     (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y = prepare_input(df)
 
     loaded_model = keras.models.load_model("my_model.keras")
-    # my_pred = loaded_model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
+    my_pred = loaded_model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
     # print(np.argmax(my_pred[0]))
     # print(my_pred[0, np.argmax(my_pred[0])])
     # np.set_printoptions(threshold=sys.maxsize)
     # print(my_pred[0].max())
-    # print(my_pred.shape)
+    print(my_pred.shape)
 
-    # summarize history for accuracy
-    plt.plot(loaded_model.history['val_accuracy'])
-    plt.plot(loaded_model.history['accuracy'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
-    # summarize history for loss
-    plt.plot(loaded_model.history['loss'])
-    plt.plot(loaded_model.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+    # # summarize history for accuracy
+    # plt.plot(loaded_model.history['val_accuracy'])
+    # plt.plot(loaded_model.history['accuracy'])
+    # plt.title('model accuracy')
+    # plt.ylabel('accuracy')
+    # plt.xlabel('epoch')
+    # plt.legend(['train', 'test'], loc='upper left')
+    # plt.show()
+    # # summarize history for loss
+    # plt.plot(loaded_model.history['loss'])
+    # plt.plot(loaded_model.history['val_loss'])
+    # plt.title('model loss')
+    # plt.ylabel('loss')
+    # plt.xlabel('epoch')
+    # plt.legend(['train', 'test'], loc='upper left')
+    # plt.show()
 
 def main2():
     print("Loading model")

@@ -3,11 +3,11 @@ from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout,
 from tensorflow.keras.models import Model
 from tensorflow import keras
 
+import numpy as np
+
 import datetime
 
 class kmodel:
-
-    # starter = False
 
     def __init__(self, model_name = None):
         self.model = None
@@ -18,20 +18,13 @@ class kmodel:
             self.model_name = f'{now.day :03d}'
         else:
             self.model = keras.models.load_model(f"keras/{self.model_name}.keras")
-        # if not self.starter:
-        #     pass
-    
-    # def start_global_attr(self):
-
-    #     try:
-    #         # Opening JSON file
-    #         with open('my_keras/data.json') as json_file:
-    #             data = json.load(json_file)
-    #     except:
-    #         print('not implemented yet in start global attr')
 
     def make_model(self, gabor_shape, fd_shape, output_size,
                 my_gabor1, my_gabor2, my_gabor3, my_gabor4, my_fd, my_output):
+        
+        if self.model is not None:
+            print('This model has already been made\nmethod terminated')
+            return
 
         gabor_input1 = Input(shape=gabor_shape, name="gabor_input_1")
         gabor_input2 = Input(shape=gabor_shape, name="gabor_input_2")
@@ -95,5 +88,11 @@ class kmodel:
 
         self.model.save(f'my_keras/{self.model_name}.keras')
 
+    def inference(self, X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd):
+        my_pred = self.model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
+
+        
+        print(np.argmax(my_pred[0]))
+        print(my_pred[0].max())
 if __name__ == "__main__":
     pass
