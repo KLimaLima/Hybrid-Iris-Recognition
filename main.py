@@ -26,11 +26,14 @@ def use_model():
 
     loaded_model = keras.models.load_model("my_model.keras")
     my_pred = loaded_model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
+    for idx, row in enumerate(my_pred):
+        print(np.argmax(row))
+        print(np.max(row))
     # print(np.argmax(my_pred[0]))
     # print(my_pred[0, np.argmax(my_pred[0])])
     # np.set_printoptions(threshold=sys.maxsize)
     # print(my_pred[0].max())
-    print(my_pred.shape)
+    # print(my_pred.shape)
 
     # # summarize history for accuracy
     # plt.plot(loaded_model.history['val_accuracy'])
@@ -169,10 +172,10 @@ def prepare_input(df):
         X_fd.append(fd_tuple)
 
         label = int(npz_file['person_num'])
-        if npz_file['lr'] == 'l':
+        if npz_file['lr'] == 'L':
             label += 1000
-        elif npz_file['lr'] != 'r':
-            print(f'image {npz_path.split('/')[0]} has neither l or r')
+        elif npz_file['lr'] != 'R':
+            print(f'image {npz_path.split('.')[0]} has neither l or r')
             exit()
         y.append(label)
 

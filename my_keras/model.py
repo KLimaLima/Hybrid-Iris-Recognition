@@ -89,10 +89,14 @@ class kmodel:
         self.model.save(f'my_keras/{self.model_name}.keras')
 
     def inference(self, X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd):
+        # NOTE: make it so that it can compare
+        # maybe change this to take one input
+        # and make new method for validation of multiple inputs
         my_pred = self.model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
 
-        
-        print(np.argmax(my_pred[0]))
-        print(my_pred[0].max())
+        for idx, row in enumerate(my_pred):
+            print(np.argmax(row))
+            print(np.max(row))
+
 if __name__ == "__main__":
     pass
