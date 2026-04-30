@@ -4,6 +4,7 @@ from preprocess import segmentation
 from roboflow import inference
 from fractal import fractal, utils
 from my_keras import model
+from tensorflow import keras
 
 import cv2
 import pandas as pd
@@ -12,6 +13,73 @@ import matplotlib.pyplot as plt
 import json
 import time
 import math
+import sys
+
+def use_model():
+
+    df = pd.read_csv("db/CASIA-Iris-Thousand.csv")
+
+    df = df.query("Index <= 995")
+    df = df.query("Index >= 980")
+
+    (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y = prepare_input(df)
+
+    loaded_model = keras.models.load_model("my_model.keras")
+    # my_pred = loaded_model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
+    # print(np.argmax(my_pred[0]))
+    # print(my_pred[0, np.argmax(my_pred[0])])
+    # np.set_printoptions(threshold=sys.maxsize)
+    # print(my_pred[0].max())
+    # print(my_pred.shape)
+
+    # summarize history for accuracy
+    plt.plot(loaded_model.history['val_accuracy'])
+    plt.plot(loaded_model.history['accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+    # summarize history for loss
+    plt.plot(loaded_model.history['loss'])
+    plt.plot(loaded_model.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
+def main2():
+    print("Loading model")
+
+    df = pd.read_csv("db/CASIA-Iris-Thousand.csv")
+
+    # Source - https://stackoverflow.com/a/71769532
+    # Posted by Devesh
+    # Retrieved 2026-04-27, License - CC BY-SA 4.0
+
+    df = df.query("Index <= 1000") # >= 10500
+
+    # Shuffle your dataset 
+    shuffle_df = df.sample(frac=1)
+
+    # Define a size for your train set 
+    train_size = int(0.8 * len(df))
+
+    # Split your dataset
+    train_set = shuffle_df[:train_size]
+    test_set = shuffle_df[train_size:]
+    # print(train_set.loc[0])
+
+    (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y = prepare_input(train_set)
+
+    # unique, counts = np.unique(y, return_counts=True)
+    # from tensorflow.keras.utils import to_categorical
+    # labels = to_categorical(y, num_classes=y.size)
+    # print(labels.shape)
+    # print(y[0])
+    # print("===================labels===================")
+    # print(labels[0])
 
 def main():
     print("Hello from hybrid-iris-recognition!")
@@ -22,7 +90,7 @@ def main():
     # Posted by Devesh
     # Retrieved 2026-04-27, License - CC BY-SA 4.0
 
-    df = df.query("Index <= 500") # >= 10500
+    df = df.query("Index <= 1000") # >= 10500
 
     # Shuffle your dataset 
     shuffle_df = df.sample(frac=1)
@@ -36,16 +104,17 @@ def main():
 
     (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y = prepare_input(train_set)
 
-    unique, counts = np.unique(y, return_counts=True)
+    # unique, counts = np.unique(y, return_counts=True)
     # print(y.size)
-    from tensorflow.keras.utils import to_categorical
-    labels = to_categorical(y, num_classes=y.size)
+    # print(y.shape)
+    # from tensorflow.keras.utils import to_categorical
+    # labels = to_categorical(y, num_classes=y.size)
     # print(labels)
-    print(y.dtype)
+    # print(y.dtype)
     # exit()
 
-    model.make_model((150, 300), (4,), y.size,
-                     X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, labels)
+    model.make_model((150, 300), (4,), 1999,
+                     X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, y)
 
     # temporary
     # df = df.query("Index >= 10760") # 1380
@@ -98,22 +167,28 @@ def prepare_input(df):
         temp_list.append(dict_fd['corr_sum_takens'])
         fd_tuple = tuple(temp_list)
         X_fd.append(fd_tuple)
-        
-        y.append(f'{npz_file['person_num']}-{npz_file['lr']}')
+
+        label = int(npz_file['person_num'])
+        if npz_file['lr'] == 'l':
+            label += 1000
+        elif npz_file['lr'] != 'r':
+            print(f'image {npz_path.split('/')[0]} has neither l or r')
+            exit()
+        y.append(label)
 
     # Source - https://stackoverflow.com/a/70051602
     # Posted by j1-lee, modified by community. See post 'Timeline' for change history
     # Retrieved 2026-04-28, License - CC BY-SA 4.0
 
-    d = {x: i for i, x in enumerate(set(y))}
-    lst_new = [d[x] for x in y]
-    # print(lst_new)
-    y = lst_new
+    # print(set(y))
+    # d = {x: i for i, x in enumerate(set(y))}
+    # lst_new = [d[x] for x in y]
+    # y = lst_new
 
     X_gabor1, X_gabor2, X_gabor3, X_gabor4 = np.array(X_gabor1), np.array(X_gabor2), np.array(X_gabor3), np.array(X_gabor4)
     X_fd = np.array(X_fd)
     # print(type(y[0]))
-    y = np.array(y, dtype=np.float32)
+    y = np.array(y)
 
     # print(X_gabor1.dtype)
     # print(X_gabor2.dtype)
@@ -350,4 +425,4 @@ def calc_fractal(code_iris, show= False):
 
 if __name__ == "__main__":
 
-    main()
+    use_model()
