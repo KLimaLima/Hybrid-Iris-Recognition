@@ -142,7 +142,6 @@ class amodel(kmodel):
         gabor_input3 = Input(shape=gabor_shape, name="gabor_input_3")
         gabor_input4 = Input(shape=gabor_shape, name="gabor_input_4")
 
-        x1 = 
         x1 = Flatten()(gabor_input1)
         x1 = BatchNormalization()(x1)
         x1 = Dense(256, activation='relu')(x1)
