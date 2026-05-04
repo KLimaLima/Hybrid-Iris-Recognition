@@ -57,3 +57,4 @@ file_list = result_dict.get('files')
 # Print every file's name
 for file in file_list:
     print(file['name'])
+    print(file['id'])

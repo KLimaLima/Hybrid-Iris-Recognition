@@ -61,16 +61,16 @@ class DriveAPI:
         # Connect to the API service
         self.service = build('drive', 'v3', credentials=self.creds)
 
-        # request a list of first N files or
-        # folders with name and id from the API.
-        results = self.service.files().list(
-            pageSize=100, fields="files(id, name)").execute()
-        items = results.get('files', [])
+        # # request a list of first N files or
+        # # folders with name and id from the API.
+        # results = self.service.files().list(
+        #     pageSize=100, fields="files(id, name)").execute()
+        # items = results.get('files', [])
 
-        # print a list of files
+        # # print a list of files
 
-        print("Here's a list of files: \n")
-        print(*items, sep="\n", end="\n\n")
+        # print("Here's a list of files: \n")
+        # print(*items, sep="\n", end="\n\n")
 
     def FileDownload(self, file_id, file_name):
         request = self.service.files().get_media(fileId=file_id)
@@ -126,11 +126,28 @@ class DriveAPI:
             # Raise UploadError if file is not uploaded.
             print("Can't Upload File.")
 
+    def FileList(self):
+
+        # request a list of first N files or folders with name and id from the API.
+        resource = self.service.files()
+        result = resource.list(fields="files(id, name)").execute()
+
+        # return the result dictionary containing the information about the files
+        # Extract the list from the dictionary
+        file_list = result.get('files')
+
+        # # Print every file's name
+        # for file in file_list:
+        #     print(file['name'])
+        #     print(file['id'])
+        return file_list
+
 if __name__ == "__main__":
     obj = DriveAPI()
 
     df = pd.read_csv("db/CASIA-Iris-Thousand.csv")
 
-    for path_to_npz in df['NPZ_Path']:
+    # for path_to_npz in df['NPZ_Path']:
 
-        obj.FileUpload(path_to_npz)
+        # obj.FileUpload(path_to_npz)
+
