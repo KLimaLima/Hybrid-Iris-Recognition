@@ -2,7 +2,6 @@
 env.py
 image.png
 S5002L02.json
-db/
 
 # Python-generated files
 __pycache__/
