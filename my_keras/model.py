@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout, BatchNormalization
 from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import CSVLogger, EarlyStopping
 from tensorflow import keras
 
 import numpy as np
@@ -15,7 +16,7 @@ class kmodel:
 
         if model_name is None:
             now = datetime.datetime.now()
-            self.model_name = f'{now.day :03d}'
+            self.model_name = f'{now.month : 03d}M-{now.day :02d}D-{now.hour :02d}h-{now.minute :02d}m-{now.second :02d}s'
         else:
             self.model = keras.models.load_model(f"keras/{self.model_name}.keras")
 
@@ -73,28 +74,43 @@ class kmodel:
         self.model.compile(
             optimizer='adam',
             loss='sparse_categorical_crossentropy',
-            metrics=['accuracy']
+            metrics=[
+                'accuracy'
+                # keras.metrics.Precision(),
+                # keras.metrics.Recall()
+                # keras.metrics.F1Score()
+                ]
         )
 
         self.model.summary()
+
+        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
+
+        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
 
         self.model.fit(
             {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
             # {"my_output": my_output},
             my_output,
-            epochs=101,
+            epochs=100,
             batch_size=32,
+            callbacks=[csv_logger],
+            verbose=2,
+            validation_split=0.2,
+            shuffle=True
         )
 
         self.model.save(f'my_keras/{self.model_name}.keras')
+        print(f'Finished training model {self.model_name}')
 
-    def inference(self, X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd):
+    def inference(self, X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, y_label):
         # NOTE: make it so that it can compare
         # maybe change this to take one input
         # and make new method for validation of multiple inputs
         my_pred = self.model.predict({"gabor_input_1": X_gabor1, "gabor_input_2": X_gabor2, "gabor_input_3": X_gabor3, "gabor_input_4": X_gabor4, "fd_input": X_fd})
 
         for idx, row in enumerate(my_pred):
+            print(f'For {y_label}:')
             print(np.argmax(row))
             print(np.max(row))
 

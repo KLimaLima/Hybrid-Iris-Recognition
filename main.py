@@ -3,7 +3,7 @@ from env import PATH_DB
 from preprocess import segmentation
 from roboflow import inference
 from fractal import fractal, utils
-from my_keras import model
+from my_keras.model import kmodel
 from tensorflow import keras
 
 import cv2
@@ -14,6 +14,23 @@ import json
 import time
 import math
 import sys
+
+def main3():
+
+    df = pd.read_csv("db/CASIA-Iris-Thousand.csv")
+
+    df = df.query("Index <= 1000")
+    # df = df.query("Index >= 980")
+
+    # Shuffle your dataset 
+    shuffle_df = df.sample(frac=1)
+
+    (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y = prepare_input(df)
+
+    my_model = kmodel()
+
+    my_model.make_model((150, 300), (4,), 2000,
+                        X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, y)
 
 def use_model():
 
@@ -428,4 +445,4 @@ def calc_fractal(code_iris, show= False):
 
 if __name__ == "__main__":
 
-    use_model()
+    main3()
