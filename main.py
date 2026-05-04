@@ -1,7 +1,7 @@
-from biometric_iris import utils as iris
-from env import PATH_DB
-from preprocess import segmentation
-from roboflow import inference
+# from biometric_iris import utils as iris
+# from env import PATH_DB
+# from preprocess import segmentation
+# from roboflow import inference
 from fractal import fractal, utils
 from my_keras.model import kmodel
 from tensorflow import keras
