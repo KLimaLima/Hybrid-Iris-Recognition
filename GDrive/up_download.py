@@ -110,7 +110,7 @@ class DriveAPI:
         
         # create file metadata
         file_metadata = {'name': name,
-                         'parents': ['1wTv0ubNJ24i9IxywsX2r8LaSBFQWfixI']}
+                         'parents': ['1CtHkAfEqHRkE39n5F1b_bkYGGihm9f7s']}
 
         try:
             media = MediaFileUpload(filepath, mimetype=mimetype)
@@ -121,10 +121,11 @@ class DriveAPI:
             
             print("File Uploaded.")
         
-        except:
+        except Exception as e:
             
             # Raise UploadError if file is not uploaded.
             print("Can't Upload File.")
+            print(e)
 
     def FileList(self):
 
@@ -146,8 +147,9 @@ if __name__ == "__main__":
     obj = DriveAPI()
 
     df = pd.read_csv("db/CASIA-Iris-Thousand.csv")
+    df = df.query("Index > 1000")
+    df = df.query("Index <= 1500")
 
-    # for path_to_npz in df['NPZ_Path']:
+    for path_to_npz in df['NPZ_Path']:
 
-        # obj.FileUpload(path_to_npz)
-
+        obj.FileUpload(path_to_npz)
