@@ -162,6 +162,64 @@ def main():
     # for val in dict_gabor_phase.values():
     #     print(val) # numpy array
 
+def prepare_input_gcolab(list_path):
+    
+    X_fd = []
+    X_gabor1, X_gabor2, X_gabor3, X_gabor4 = [],[],[],[]
+    y = []
+    
+    for npz_path in list_path:
+        
+        npz_file = np.load(npz_path, allow_pickle=True)
+
+        dict_gabor_phase = npz_file['gabor_phase'].item()
+        gabor_phase_list = list(dict_gabor_phase.values())
+        X_gabor1.append(gabor_phase_list[0])
+        X_gabor2.append(gabor_phase_list[1])
+        X_gabor3.append(gabor_phase_list[2])
+        X_gabor4.append(gabor_phase_list[3])
+
+        dict_fd = npz_file['fd_hist_eq'].item()
+        temp_list = []
+        temp_list.append(dict_fd['box_counting_original']['fd'])
+        temp_list.append(dict_fd['temporal_sampling']['fd'])
+        temp_list.append(dict_fd['corr_sum']['fd'])
+        temp_list.append(dict_fd['corr_sum_takens'])
+        fd_tuple = tuple(temp_list)
+        X_fd.append(fd_tuple)
+
+        label = int(npz_file['person_num'])
+        if npz_file['lr'] == 'L':
+            label += 1000
+        elif npz_file['lr'] != 'R':
+            print(f'image {npz_path.split('.')[0]} has neither l or r')
+            exit()
+        y.append(label)
+
+    # Source - https://stackoverflow.com/a/70051602
+    # Posted by j1-lee, modified by community. See post 'Timeline' for change history
+    # Retrieved 2026-04-28, License - CC BY-SA 4.0
+
+    # print(set(y))
+    # d = {x: i for i, x in enumerate(set(y))}
+    # lst_new = [d[x] for x in y]
+    # y = lst_new
+
+    X_gabor1, X_gabor2, X_gabor3, X_gabor4 = np.array(X_gabor1), np.array(X_gabor2), np.array(X_gabor3), np.array(X_gabor4)
+    X_fd = np.array(X_fd)
+    # print(type(y[0]))
+    y = np.array(y)
+
+    # print(X_gabor1.dtype)
+    # print(X_gabor2.dtype)
+    # print(X_gabor3.dtype)
+    # print(X_gabor4.dtype)
+    # print(fd_tuple)
+    # print(y.dtype)
+    # exit()
+
+    return (X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd), y
+
 def prepare_input(df):
     
     X_fd = []
