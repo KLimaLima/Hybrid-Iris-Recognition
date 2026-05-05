@@ -237,6 +237,10 @@ def prepare_input(df):
         X_gabor3.append(gabor_phase_list[2])
         X_gabor4.append(gabor_phase_list[3])
 
+        temp = np.expand_dims(gabor_phase_list[0], axis=0)
+        print(temp.shape)
+        exit()
+
         dict_fd = npz_file['fd_hist_eq'].item()
         temp_list = []
         temp_list.append(dict_fd['box_counting_original']['fd'])

@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout, BatchNormalization, Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout, BatchNormalization, Conv1D, Conv2D, MaxPooling1D, MaxPooling2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import CSVLogger, EarlyStopping
 from tensorflow import keras
@@ -32,37 +32,37 @@ class kmodel():
         gabor_input3 = Input(shape=gabor_shape, name="gabor_input_3")
         gabor_input4 = Input(shape=gabor_shape, name="gabor_input_4")
 
-        x1 = BatchNormalization()(gabor_input1)
-        x1 = Conv2D(32, (3,3), activation='relu')(x1)
-        x1 = MaxPooling2D((2,2))(x1)
+        x1 = Flatten()(gabor_input1)
         x1 = BatchNormalization()(x1)
-        x1 = Flatten()(x1)
+        x1 = Conv1D()(x1)
+        x1 = BatchNormalization()(x1)
         x1 = Dense(256, activation='relu')(x1)
         x1 = Dense(128, activation='relu')(x1)
+        x1 = BatchNormalization()(x1)
 
-        x2 = BatchNormalization()(gabor_input2)
-        x2 = Conv2D(32, (3,3), activation='relu')(x2)
-        x2 = MaxPooling2D((2,2))(x2)
+        x2 = Flatten()(gabor_input2)
         x2 = BatchNormalization()(x2)
-        x2 = Flatten()(x2)
+        x2 = Conv1D()(x2)
+        x2 = BatchNormalization()(x2)
         x2 = Dense(256, activation='relu')(x2)
         x2 = Dense(128, activation='relu')(x2)
+        x2 = BatchNormalization()(x2)
 
-        x3 = BatchNormalization()(gabor_input3)
-        x3 = Conv2D(32, (3,3), activation='relu')(x3)
-        x3 = MaxPooling2D((2,2))(x3)
+        x3 = Flatten()(gabor_input3)
         x3 = BatchNormalization()(x3)
-        x3 = Flatten()(x3)
+        x3 = Conv1D()(x3)
+        x3 = BatchNormalization()(x3)
         x3 = Dense(256, activation='relu')(x3)
         x3 = Dense(128, activation='relu')(x3)
+        x3 = BatchNormalization()(x3)
 
-        x4 = BatchNormalization()(gabor_input4)
-        x4 = Conv2D(32, (3,3), activation='relu')(x4)
-        x4 = MaxPooling2D((2,2))(x4)
+        x4 = Flatten()(gabor_input4)
         x4 = BatchNormalization()(x4)
-        x4 = Flatten()(x4)
+        x4 = Conv1D()(x4)
+        x4 = BatchNormalization()(x4)
         x4 = Dense(256, activation='relu')(x4)
         x4 = Dense(128, activation='relu')(x4)
+        x4 = BatchNormalization()(x4)
 
         # --- Structured data branch ---
         fd_input = Input(shape=fd_shape, name="fd_input")
@@ -70,6 +70,7 @@ class kmodel():
         y = BatchNormalization()(fd_input)
         y = Dense(64, activation='relu')(y)
         y = Dense(32, activation='relu')(y)
+        y = BatchNormalization()(y)
 
         # --- Concatenate ---
         combined = Concatenate()([x1,x2,x3,x4, y])
@@ -211,7 +212,105 @@ class amodel(kmodel):
         )
 
         self.model.save(f'my_keras/{self.model_name}.keras')
-        print(f'Finished training model {self.model_name}')        
+        print(f'Finished training model {self.model_name}')
+
+class bmodel(kmodel):
+
+    def __init__(self):
+        super().__init__()
+
+    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor1, my_gabor2, my_gabor3, my_gabor4, my_fd, my_output):
+        if self.model is not None:
+            print('This model has already been made\nmethod terminated')
+            return
+
+        gabor_input1 = Input(shape=gabor_shape, name="gabor_input_1")
+        gabor_input2 = Input(shape=gabor_shape, name="gabor_input_2")
+        gabor_input3 = Input(shape=gabor_shape, name="gabor_input_3")
+        gabor_input4 = Input(shape=gabor_shape, name="gabor_input_4")
+
+        x1 = Conv2D(32, (3,3), activation='relu')(gabor_input1)
+        x1 = BatchNormalization()(x1)
+        x1 = MaxPooling2D((2,2))(x1)
+        x1 = Conv2D(64, (3,3), activation='relu')(x1)
+        x1 = BatchNormalization()(x1)
+        x1 = MaxPooling2D((2,2))(x1)
+        x1 = Flatten()(x1)
+
+        x2 = Conv2D(32, (3,3), activation='relu')(gabor_input2)
+        x2 = BatchNormalization()(x2)
+        x2 = MaxPooling2D((2,2))(x2)
+        x2 = Conv2D(64, (3,3), activation='relu')(x2)
+        x2 = BatchNormalization()(x2)
+        x2 = MaxPooling2D((2,2))(x2)
+        x2 = Flatten()(x2)
+
+        x3 = Conv2D(32, (3,3), activation='relu')(gabor_input3)
+        x3 = BatchNormalization()(x3)
+        x3 = MaxPooling2D((2,2))(x3)
+        x3 = Conv2D(64, (3,3), activation='relu')(x3)
+        x3 = BatchNormalization()(x3)
+        x3 = MaxPooling2D((2,2))(x3)
+        x3 = Flatten()(x3)
+
+        x4 = Conv2D(32, (3,3), activation='relu')(gabor_input4)
+        x4 = BatchNormalization()(x4)
+        x4 = MaxPooling2D((2,2))(x4)
+        x4 = Conv2D(64, (3,3), activation='relu')(x4)
+        x4 = BatchNormalization()(x4)
+        x4 = MaxPooling2D((2,2))(x4)
+        x4 = Flatten()(x4)
+
+        # --- Structured data branch ---
+        fd_input = Input(shape=fd_shape, name="fd_input")
+
+        y = BatchNormalization()(fd_input)
+        y = Dense(64, activation='relu')(y)
+        y = Dense(32, activation='relu')(y)
+
+        # --- Concatenate ---
+        combined = Concatenate()([x1,x2,x3,x4, y])
+
+        z = Dense(64, activation='relu')(combined)
+        z = Dropout(0.5)(z)
+        output = Dense(output_size, activation='softmax', name="my_output")(z)  # change depending on task
+
+        # --- Model ---
+        self.model = Model(inputs=[gabor_input1, gabor_input2, gabor_input3, gabor_input4, fd_input], outputs=output)
+
+        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
+
+        self.model.compile(
+            optimizer='adam',
+            loss='sparse_categorical_crossentropy',
+            metrics=[
+                'accuracy'
+                # keras.metrics.Precision(),
+                # keras.metrics.Recall()
+                # keras.metrics.F1Score()
+                ]
+        )
+
+        self.model.summary()
+
+        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
+
+        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
+
+        self.model.fit(
+            {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
+            # {"my_output": my_output},
+            my_output,
+            epochs=100,
+            batch_size=32,
+            callbacks=[csv_logger],
+            verbose=2,
+            validation_split=0.2,
+            shuffle=True
+        )
+
+        self.model.save(f'my_keras/{self.model_name}.keras')
+        print(f'Finished training model {self.model_name}')
 
 if __name__ == "__main__":
     pass
