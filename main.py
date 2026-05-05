@@ -174,10 +174,10 @@ def prepare_input_gcolab(list_path):
 
         dict_gabor_phase = npz_file['gabor_phase'].item()
         gabor_phase_list = list(dict_gabor_phase.values())
-        X_gabor1.append(gabor_phase_list[0])
-        X_gabor2.append(gabor_phase_list[1])
-        X_gabor3.append(gabor_phase_list[2])
-        X_gabor4.append(gabor_phase_list[3])
+        X_gabor1.append(np.expand_dims(gabor_phase_list[0], axis=0))
+        X_gabor2.append(np.expand_dims(gabor_phase_list[1], axis=0))
+        X_gabor3.append(np.expand_dims(gabor_phase_list[2], axis=0))
+        X_gabor4.append(np.expand_dims(gabor_phase_list[3], axis=0))
 
         dict_fd = npz_file['fd_hist_eq'].item()
         temp_list = []
@@ -236,10 +236,6 @@ def prepare_input(df):
         X_gabor2.append(gabor_phase_list[1])
         X_gabor3.append(gabor_phase_list[2])
         X_gabor4.append(gabor_phase_list[3])
-
-        temp = np.expand_dims(gabor_phase_list[0], axis=0)
-        print(temp.shape)
-        exit()
 
         dict_fd = npz_file['fd_hist_eq'].item()
         temp_list = []
