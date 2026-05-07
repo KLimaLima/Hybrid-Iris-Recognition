@@ -296,7 +296,7 @@ class bmodel(kmodel):
 
         self.model.compile(
             optimizer='adam',
-            loss='sparse_categorical_crossentropy',
+            loss='kl_divergence',
             metrics=[
                 'accuracy'
                 # keras.metrics.Precision(),
@@ -311,12 +311,12 @@ class bmodel(kmodel):
 
         early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
 
-        self.model.fit(
+        history = self.model.fit(
             {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
             # {"my_output": my_output},
             my_output,
-            epochs=100,
-            batch_size=32,
+            epochs=200,
+            batch_size=16,
             callbacks=[csv_logger],
             verbose=2,
             validation_split=0.2,
@@ -324,6 +324,24 @@ class bmodel(kmodel):
         )
 
         self.model.save(f'my_keras/{self.model_name}.keras')
+
+        # summarize history for accuracy
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        
         print(f'Finished training model {self.model_name}')
 
 if __name__ == "__main__":
