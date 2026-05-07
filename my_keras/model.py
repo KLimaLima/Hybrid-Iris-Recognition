@@ -14,14 +14,99 @@ class kmodel():
         self.model = None
         self.model_name = model_name
 
+        self.optimizer = 'adam'
+        self.loss = 'categorical_crossentropy'
+        self.metrics = ['accuracy']
+
+        self.epochs = 200
+        self.batch_size = 32
+        self.validation_split = 0.2
+        self.shuffle = True
+
         if model_name is None:
             now = datetime.datetime.now()
             self.model_name = f'{now.month : 03d}M-{now.day :02d}D-{now.hour :02d}h-{now.minute :02d}m-{now.second :02d}s'
         else:
             self.model = keras.models.load_model(f"keras/{self.model_name}.keras")
 
+    def set_compile(self, optimizer: str = None, loss: str = None, metrics: list[str] = None):
+
+        if optimizer is not None:
+            self.optimizer = optimizer
+
+        if loss is not None:
+            self.loss = loss
+
+        if metrics is not None:
+            self.metrics = metrics
+
+    def set_fit(self, epochs: int = None, batch_size: int = None, validation_split: int = None, shuffle: bool = None):
+
+        if epochs is not None:
+            self.epochs = epochs
+        
+        if batch_size is not None:
+            self.batch_size = batch_size
+
+        if validation_split is not None:
+            self.validation_split = validation_split
+
+        if shuffle is not None:
+            self.shuffle = shuffle
+
     def make_model(self, gabor_shape, fd_shape, output_size,
                 my_gabor1, my_gabor2, my_gabor3, my_gabor4, my_fd, my_output):
+        
+        self.make_nn(gabor_shape, fd_shape, output_size)
+        
+        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
+
+        self.model.compile(
+            optimizer=self.optimizer,
+            loss=self.loss,
+            metrics=self.metrics
+        )
+
+        self.model.summary()
+
+        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
+
+        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
+
+        history = self.model.fit(
+            {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
+            # {"my_output": my_output},
+            my_output,
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+            callbacks=[csv_logger],
+            verbose=2,
+            validation_split=self.validation_split,
+            shuffle=self.shuffle
+        )
+
+        self.model.save(f'my_keras/{self.model_name}.keras')
+
+        # summarize history for accuracy
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        print(f'Finished training model {self.model_name}')
+
+    def make_nn(self, gabor_shape, fd_shape, output_size):
         
         if self.model is not None:
             print('This model has already been made\nmethod terminated')
@@ -82,58 +167,6 @@ class kmodel():
         # --- Model ---
         self.model = Model(inputs=[gabor_input1, gabor_input2, gabor_input3, gabor_input4, fd_input], outputs=output)
 
-        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
-
-        self.model.compile(
-            optimizer='adam',
-            loss='kl_divergence',
-            metrics=[
-                'accuracy'
-                # keras.metrics.Precision(),
-                # keras.metrics.Recall()
-                # keras.metrics.F1Score()
-                ]
-        )
-
-        self.model.summary()
-
-        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
-
-        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
-
-        history = self.model.fit(
-            {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
-            # {"my_output": my_output},
-            my_output,
-            epochs=200,
-            batch_size=16,
-            callbacks=[csv_logger],
-            verbose=2,
-            validation_split=0.2,
-            shuffle=True
-        )
-
-        self.model.save(f'my_keras/{self.model_name}.keras')
-
-        # summarize history for accuracy
-        plt.plot(history.history['accuracy'])
-        plt.plot(history.history['val_accuracy'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-        # summarize history for loss
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-
-        print(f'Finished training model {self.model_name}')
-
     def inference(self, X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, y_label):
         # NOTE: make it so that it can compare
         # maybe change this to take one input
@@ -150,7 +183,7 @@ class amodel(kmodel):
     def __init__(self):
         super().__init__()
 
-    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor1, my_gabor2, my_gabor3, my_gabor4, my_fd, my_output):
+    def make_nn(self, gabor_shape, fd_shape, output_size):
 
         if self.model is not None:
             print('This model has already been made\nmethod terminated')
@@ -198,46 +231,12 @@ class amodel(kmodel):
         # --- Model ---
         self.model = Model(inputs=[gabor_input1, gabor_input2, gabor_input3, gabor_input4, fd_input], outputs=output)
 
-        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
-
-        self.model.compile(
-            optimizer='adam',
-            loss='sparse_categorical_crossentropy',
-            metrics=[
-                'accuracy'
-                # keras.metrics.Precision(),
-                # keras.metrics.Recall()
-                # keras.metrics.F1Score()
-                ]
-        )
-
-        self.model.summary()
-
-        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
-
-        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
-
-        self.model.fit(
-            {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
-            # {"my_output": my_output},
-            my_output,
-            epochs=100,
-            batch_size=32,
-            callbacks=[csv_logger],
-            verbose=2,
-            validation_split=0.2,
-            shuffle=True
-        )
-
-        self.model.save(f'my_keras/{self.model_name}.keras')
-        print(f'Finished training model {self.model_name}')
-
 class bmodel(kmodel):
 
     def __init__(self):
         super().__init__()
 
-    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor1, my_gabor2, my_gabor3, my_gabor4, my_fd, my_output):
+    def make_nn(self, gabor_shape, fd_shape, output_size):
         if self.model is not None:
             print('This model has already been made\nmethod terminated')
             return
@@ -291,58 +290,6 @@ class bmodel(kmodel):
 
         # --- Model ---
         self.model = Model(inputs=[gabor_input1, gabor_input2, gabor_input3, gabor_input4, fd_input], outputs=output)
-
-        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
-
-        self.model.compile(
-            optimizer='adam',
-            loss='categorical_crossentropy',
-            metrics=[
-                'accuracy'
-                # keras.metrics.Precision(),
-                # keras.metrics.Recall()
-                # keras.metrics.F1Score()
-                ]
-        )
-
-        self.model.summary()
-
-        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
-
-        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
-
-        history = self.model.fit(
-            {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
-            # {"my_output": my_output},
-            my_output,
-            epochs=200,
-            batch_size=16,
-            callbacks=[csv_logger],
-            verbose=2,
-            validation_split=0.2,
-            shuffle=True
-        )
-
-        self.model.save(f'my_keras/{self.model_name}.keras')
-
-        # summarize history for accuracy
-        plt.plot(history.history['accuracy'])
-        plt.plot(history.history['val_accuracy'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-        # summarize history for loss
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-
-        print(f'Finished training model {self.model_name}')
 
 if __name__ == "__main__":
     pass
