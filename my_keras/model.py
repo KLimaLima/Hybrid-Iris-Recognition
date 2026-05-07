@@ -296,7 +296,7 @@ class bmodel(kmodel):
 
         self.model.compile(
             optimizer='adam',
-            loss='kl_divergence',
+            loss='categorical_crossentropy',
             metrics=[
                 'accuracy'
                 # keras.metrics.Precision(),
@@ -341,7 +341,7 @@ class bmodel(kmodel):
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
-        
+
         print(f'Finished training model {self.model_name}')
 
 if __name__ == "__main__":
