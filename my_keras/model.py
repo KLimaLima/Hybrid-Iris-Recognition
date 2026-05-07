@@ -252,6 +252,7 @@ class bmodel(kmodel):
         x1 = BatchNormalization()(x1)
         x1 = MaxPooling2D((2,2))(x1)
         x1 = Flatten()(x1)
+        x1 = Dropout(0.5)(x1)
 
         x2 = Conv2D(32, (3,3), activation='relu')(gabor_input2)
         x2 = BatchNormalization()(x2)
@@ -259,6 +260,7 @@ class bmodel(kmodel):
         x2 = BatchNormalization()(x2)
         x2 = MaxPooling2D((2,2))(x2)
         x2 = Flatten()(x2)
+        x2 = Dropout(0.5)(x2)
 
         x3 = Conv2D(32, (3,3), activation='relu')(gabor_input3)
         x3 = BatchNormalization()(x3)
@@ -266,6 +268,7 @@ class bmodel(kmodel):
         x3 = BatchNormalization()(x3)
         x3 = MaxPooling2D((2,2))(x3)
         x3 = Flatten()(x3)
+        x3 = Dropout(0.5)(x3)
 
         x4 = Conv2D(32, (3,3), activation='relu')(gabor_input4)
         x4 = BatchNormalization()(x4)
@@ -273,6 +276,7 @@ class bmodel(kmodel):
         x4 = BatchNormalization()(x4)
         x4 = MaxPooling2D((2,2))(x4)
         x4 = Flatten()(x4)
+        x4 = Dropout(0.5)(x4)
 
         # --- Structured data branch ---
         fd_input = Input(shape=fd_shape, name="fd_input")
@@ -280,6 +284,7 @@ class bmodel(kmodel):
         y = BatchNormalization()(fd_input)
         y = Dense(64, activation='relu')(y)
         y = Dense(32, activation='relu')(y)
+        y = Dropout(0.5)(y)
 
         # --- Concatenate ---
         combined = Concatenate()([x1,x2,x3,x4, y])
