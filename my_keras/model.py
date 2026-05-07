@@ -3,7 +3,7 @@ from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout,
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import CSVLogger, EarlyStopping
 from tensorflow import keras
-
+import matplotlib.pyplot as plt
 import numpy as np
 
 import datetime
@@ -86,7 +86,7 @@ class kmodel():
 
         self.model.compile(
             optimizer='adam',
-            loss='sparse_categorical_crossentropy',
+            loss='kl_divergence',
             metrics=[
                 'accuracy'
                 # keras.metrics.Precision(),
@@ -101,12 +101,12 @@ class kmodel():
 
         early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
 
-        self.model.fit(
+        history = self.model.fit(
             {"gabor_input_1": my_gabor1, "gabor_input_2": my_gabor2, "gabor_input_3": my_gabor3, "gabor_input_4": my_gabor4, "fd_input": my_fd},
             # {"my_output": my_output},
             my_output,
-            epochs=100,
-            batch_size=32,
+            epochs=200,
+            batch_size=16,
             callbacks=[csv_logger],
             verbose=2,
             validation_split=0.2,
@@ -114,6 +114,24 @@ class kmodel():
         )
 
         self.model.save(f'my_keras/{self.model_name}.keras')
+
+        # summarize history for accuracy
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
         print(f'Finished training model {self.model_name}')
 
     def inference(self, X_gabor1, X_gabor2, X_gabor3, X_gabor4, X_fd, y_label):
@@ -232,7 +250,6 @@ class bmodel(kmodel):
         x1 = Conv2D(32, (3,3), activation='relu')(gabor_input1)
         x1 = BatchNormalization()(x1)
         x1 = MaxPooling2D((2,2))(x1)
-        x1 = Conv2D(64, (3,3), activation='relu')(x1)
         x1 = BatchNormalization()(x1)
         x1 = MaxPooling2D((2,2))(x1)
         x1 = Flatten()(x1)
@@ -240,7 +257,6 @@ class bmodel(kmodel):
         x2 = Conv2D(32, (3,3), activation='relu')(gabor_input2)
         x2 = BatchNormalization()(x2)
         x2 = MaxPooling2D((2,2))(x2)
-        x2 = Conv2D(64, (3,3), activation='relu')(x2)
         x2 = BatchNormalization()(x2)
         x2 = MaxPooling2D((2,2))(x2)
         x2 = Flatten()(x2)
@@ -248,7 +264,6 @@ class bmodel(kmodel):
         x3 = Conv2D(32, (3,3), activation='relu')(gabor_input3)
         x3 = BatchNormalization()(x3)
         x3 = MaxPooling2D((2,2))(x3)
-        x3 = Conv2D(64, (3,3), activation='relu')(x3)
         x3 = BatchNormalization()(x3)
         x3 = MaxPooling2D((2,2))(x3)
         x3 = Flatten()(x3)
@@ -256,7 +271,6 @@ class bmodel(kmodel):
         x4 = Conv2D(32, (3,3), activation='relu')(gabor_input4)
         x4 = BatchNormalization()(x4)
         x4 = MaxPooling2D((2,2))(x4)
-        x4 = Conv2D(64, (3,3), activation='relu')(x4)
         x4 = BatchNormalization()(x4)
         x4 = MaxPooling2D((2,2))(x4)
         x4 = Flatten()(x4)
