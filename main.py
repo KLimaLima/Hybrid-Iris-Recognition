@@ -176,19 +176,19 @@ def prepare_input_gcolab(list_path):
         gabor_phase_list = list(dict_gabor_phase.values())
 
         temp1 = np.expand_dims(gabor_phase_list[0], axis=2)
-        cv2.cvtColor(temp1, cv2.COLOR_GRAY2BGR)
+        # cv2.cvtColor(temp1, cv2.COLOR_GRAY2BGR)
         X_gabor1.append(temp1)
 
         temp2 = np.expand_dims(gabor_phase_list[1], axis=2)
-        cv2.cvtColor(temp2, cv2.COLOR_GRAY2BGR)
+        # cv2.cvtColor(temp2, cv2.COLOR_GRAY2BGR)
         X_gabor2.append(temp2)
 
         temp3 = np.expand_dims(gabor_phase_list[2], axis=2)
-        cv2.cvtColor(temp3, cv2.COLOR_GRAY2BGR)
+        # cv2.cvtColor(temp3, cv2.COLOR_GRAY2BGR)
         X_gabor3.append(temp3)
 
         temp4 = np.expand_dims(gabor_phase_list[3], axis=2)
-        cv2.cvtColor(temp4, cv2.COLOR_GRAY2BGR)
+        # cv2.cvtColor(temp4, cv2.COLOR_GRAY2BGR)
         X_gabor4.append(temp4)
 
         dict_fd = npz_file['fd_hist_eq'].item()

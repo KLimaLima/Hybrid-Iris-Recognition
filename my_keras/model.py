@@ -418,5 +418,93 @@ class cmodel(kmodel):
         # --- Model ---
         self.model = Model(inputs=[base_model1, base_model2, base_model3, base_model4, fd_input], outputs=output)
 
+class dmodel(kmodel):
+
+    def __init__(self):
+        super().__init__()
+
+    def make_nn(self, gabor_shape, fd_shape, output_size):
+
+        if self.model is not None:
+            print('This model has already been made\nmethod terminated')
+            return
+        
+        image_input = Input(shape=gabor_shape, name='image_input')
+
+        x = Conv2D(32, (3,3), activation='relu')(image_input)
+        x = MaxPooling2D((2,2))(x)
+        x = Conv2D(64, (3,3), activation='relu')(x)
+        x = MaxPooling2D((2,2))(x)
+        x = Flatten()(x)
+
+        # --- Structured data branch ---
+        fd_input = Input(shape=fd_shape, name="fd_input")
+
+        y = BatchNormalization()(fd_input)
+        y = Dense(64, activation='relu')(y)
+        y = Dense(32, activation='relu')(y)
+        y = Dropout(0.5)(y)
+
+        # --- Concatenate ---
+        combined = Concatenate()([image_input, y])
+
+        z = Dense(64, activation='relu')(combined)
+        z = Dropout(0.5)(z)
+        output = Dense(output_size, activation='softmax', name="my_output")(z)  # change depending on task
+
+        # --- Model ---
+        self.model = Model(inputs=[image_input, fd_input], outputs=output)
+
+    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor1, my_gabor2 = None, my_gabor3 = None, my_gabor4 = None, my_fd = None, my_output =None):
+
+        self.make_nn(gabor_shape, fd_shape, output_size)
+        
+        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
+
+        self.model.compile(
+            optimizer=self.optimizer,
+            loss=self.loss,
+            metrics=self.metrics
+        )
+
+        self.model.summary()
+
+        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
+
+        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
+
+        history = self.model.fit(
+            {"image_input": my_gabor1, "fd_input": my_fd},
+            # {"my_output": my_output},
+            my_output,
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+            callbacks=[csv_logger],
+            verbose=2,
+            validation_split=self.validation_split,
+            shuffle=self.shuffle
+        )
+
+        self.model.save(f'my_keras/{self.model_name}.keras')
+
+        # summarize history for accuracy
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        print(f'Finished training model {self.model_name}')
+
 if __name__ == "__main__":
     pass
