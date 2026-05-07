@@ -446,7 +446,7 @@ class dmodel(kmodel):
         y = Dropout(0.5)(y)
 
         # --- Concatenate ---
-        combined = Concatenate()([image_input, y])
+        combined = Concatenate()([x, y])
 
         z = Dense(64, activation='relu')(combined)
         z = Dropout(0.5)(z)
