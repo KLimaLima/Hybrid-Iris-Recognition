@@ -436,7 +436,7 @@ class dmodel(kmodel):
         x = MaxPooling2D((2,2))(x)
         x = Conv2D(64, (3,3), activation='relu')(x)
         x = MaxPooling2D((2,2))(x)
-        # x = Flatten()(x)
+        x = Flatten()(x)
         x = Dropout(0.5)(x)
 
         x = Dense(128, activation='relu',kernel_regularizer=l2(0.001))(x)
