@@ -175,10 +175,10 @@ def prepare_input_gcolab(list_path):
         dict_gabor_phase = npz_file['gabor_phase'].item()
         gabor_phase_list = list(dict_gabor_phase.values())
 
-        # temp1 = np.expand_dims(gabor_phase_list[0], axis=2)
+        temp1 = np.expand_dims(gabor_phase_list[0], axis=2)
         # cv2.cvtColor(temp1, cv2.COLOR_GRAY2BGR)
         # X_gabor1.append(temp1)
-        temp1 = np.expand_dims(npz_file['code_hist_eq'], axis=2)
+        # temp1 = np.expand_dims(npz_file['code_hist_eq'], axis=2)
         X_gabor1.append(temp1)
 
         temp2 = np.expand_dims(gabor_phase_list[1], axis=2)

@@ -3,6 +3,7 @@ from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout,
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import CSVLogger, EarlyStopping
 from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.regularizers import l2
 from tensorflow import keras
 import matplotlib.pyplot as plt
 import numpy as np
@@ -435,7 +436,10 @@ class dmodel(kmodel):
         x = MaxPooling2D((2,2))(x)
         x = Conv2D(64, (3,3), activation='relu')(x)
         x = MaxPooling2D((2,2))(x)
-        x = Flatten()(x)
+        # x = Flatten()(x)
+        x = Dropout(0.5)(x)
+
+        x = Dense(128, activation='relu',kernel_regularizer=l2(0.001))(x)
 
         # --- Structured data branch ---
         fd_input = Input(shape=fd_shape, name="fd_input")
