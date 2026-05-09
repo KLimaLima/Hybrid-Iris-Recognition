@@ -510,5 +510,44 @@ class dmodel(kmodel):
 
         print(f'Finished training model {self.model_name}')
 
+class ABC01model(kmodel):
+
+    def __init__(self):
+        super().__init__()
+
+    def make_nn(self, gabor_shape, fd_shape, output_size):
+
+        if self.model is not None:
+            print('This model has already been made\nmethod terminated')
+            return
+        
+        image_input = Input(shape=gabor_shape, name='image_input')
+
+        x = Conv2D(32, (3,3), activation='relu')(image_input)
+        x = MaxPooling2D((2,2))(x)
+        x = Conv2D(64, (3,3), activation='relu')(x)
+        x = MaxPooling2D((2,2))(x)
+        x = Flatten()(x)
+        x = Dropout(0.5)(x)
+        x = Dense(128, activation='relu',kernel_regularizer=l2(0.001))(x)
+
+        # --- Structured data branch ---
+        fd_input = Input(shape=fd_shape, name="fd_input")
+
+        y = BatchNormalization()(fd_input)
+        y = Dense(64, activation='relu')(y)
+        y = Dense(32, activation='relu')(y)
+        y = Dropout(0.5)(y)
+
+        # --- Concatenate ---
+        combined = Concatenate()([x, y])
+
+        z = Dense(64, activation='relu')(combined)
+        z = Dropout(0.5)(z)
+        output = Dense(output_size, activation='softmax', name="my_output")(z)  # change depending on task
+
+        # --- Model ---
+        self.model = Model(inputs=[image_input, fd_input], outputs=output)
+
 if __name__ == "__main__":
     pass
