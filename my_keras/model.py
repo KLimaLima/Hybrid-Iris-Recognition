@@ -335,7 +335,7 @@ class cmodel(kmodel):
         )
 
         # Freeze pretrained layers (important)
-        for layer in base_model1.layers:
+        for layer in base_model2.layers:
             layer.trainable = False
 
         x2 = base_model2.output
@@ -352,7 +352,7 @@ class cmodel(kmodel):
         for layer in base_model3.layers:
             layer.trainable = False
 
-        x3 = base_model2.output
+        x3 = base_model3.output
         x3 = GlobalAveragePooling2D()(x3)
 
         base_model4 = MobileNetV2(
@@ -366,7 +366,7 @@ class cmodel(kmodel):
         for layer in base_model4.layers:
             layer.trainable = False
 
-        x4 = base_model2.output
+        x4 = base_model4.output
         x4 = GlobalAveragePooling2D()(x4)
 
         # x1 = Conv2D(32, (3,3), activation='relu')(gabor_input1)

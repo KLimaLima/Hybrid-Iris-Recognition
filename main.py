@@ -162,6 +162,62 @@ def main():
     # for val in dict_gabor_phase.values():
     #     print(val) # numpy array
 
+def prepare_input_gcolab_2(list_path):
+    
+    X_fd = []
+    X_gabor = []
+    y = []
+    
+    for npz_path in list_path:
+        
+        npz_file = np.load(npz_path, allow_pickle=True)
+
+        label = int(npz_file['person_num'])
+        if npz_file['lr'] == 'L':
+            label += 1000
+        elif npz_file['lr'] != 'R':
+            print(f'image {npz_path.split('.')[0]} has neither l or r')
+            exit()
+        # y.append(label)
+
+        dict_fd = npz_file['fd_hist_eq'].item()
+        temp_list = []
+        temp_list.append(dict_fd['box_counting_original']['fd'])
+        temp_list.append(dict_fd['temporal_sampling']['fd'])
+        temp_list.append(dict_fd['corr_sum']['fd'])
+        temp_list.append(dict_fd['corr_sum_takens'])
+        fd_tuple = tuple(temp_list)
+        # X_fd.append(fd_tuple)
+
+        dict_gabor_phase = npz_file['gabor_phase'].item()
+        gabor_phase_list = list(dict_gabor_phase.values())
+
+        temp1 = np.expand_dims(gabor_phase_list[0], axis=2)
+        X_gabor.append(temp1)
+        X_fd.append(fd_tuple)
+        y.append(label)
+
+        temp2 = np.expand_dims(gabor_phase_list[1], axis=2)
+        X_gabor.append(temp2)
+        X_fd.append(fd_tuple)
+        y.append(label)
+
+        temp3 = np.expand_dims(gabor_phase_list[2], axis=2)
+        X_gabor.append(temp3)
+        X_fd.append(fd_tuple)
+        y.append(label)
+
+        temp4 = np.expand_dims(gabor_phase_list[3], axis=2)
+        X_gabor.append(temp4)
+        X_fd.append(fd_tuple)
+        y.append(label)
+
+    X_gabor = np.array(X_gabor)
+    X_fd = np.array(X_fd)
+    y = np.array(y)
+
+    return X_gabor, X_fd, y
+
 def prepare_input_gcolab(list_path):
     
     X_fd = []
