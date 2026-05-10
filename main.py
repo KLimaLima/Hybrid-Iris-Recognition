@@ -1,7 +1,7 @@
-# from biometric_iris import utils as iris
+from biometric_iris import utils as iris
 # from env import PATH_DB
 # from preprocess import segmentation
-# from roboflow import inference
+from roboflow import inference
 from fractal import fractal, utils
 from my_keras.model import kmodel
 from tensorflow import keras
@@ -14,6 +14,7 @@ import json
 import time
 import math
 import sys
+import os
 
 def main3():
 
@@ -359,6 +360,11 @@ def extract_save2npz(img_path: str):
     split_xtenstion = img_path.split('.')
     path_json = f'{split_xtenstion[0]}.json'
 
+    if os.path.isfile(f'{split_xtenstion[0]}.npz'):
+        print(f'{split_xtenstion[0]}.npz already exist')
+        return
+    print(f'making {split_xtenstion[0]}.npz')
+
     # if there is no existing coords, get it
     try:    
         with open(path_json, "r") as j:
@@ -405,7 +411,8 @@ def extract_save2npz(img_path: str):
     gabor_magnitude = {}
     gabor_phase ={}
     
-    for theta in [0, math.pi/4, math.pi/2, 3*math.pi/4,]:
+    # for theta in [0, math.pi/4, math.pi/2, 3*math.pi/4,]:
+    for theta in [0, 45, 90, 135]:
 
         my_gabor, magnitude, phase = gabor_v2(code_hist_eq, theta)
 
@@ -458,11 +465,11 @@ def extract_save2npz(img_path: str):
 # image = np.zeros((64, 64))
 # image[32, 32] = 1          # a delta impulse image to visualize the filtering kernel
 
-def gabor_v2(image, theta_in_rad, wavelength = 10, gamma = 0.5):
+def gabor_v2(image, theta_in_degree, wavelength = 10, gamma = 0.5):
 
     # line below converts degree to radian
-    # orientation = -theta_in_degree / 180 * math.pi    # in radian, and seems to run in opposite direction
-    orientation = theta_in_rad
+    orientation = -theta_in_degree / 180 * math.pi    # in radian, and seems to run in opposite direction
+    # orientation = theta_in_rad
     sigma = 0.5 * wavelength * 1         # 1 == SpatialFrequencyBandwidth
     # gamma = 0.5                          # SpatialAspectRatio
     shape = 1 + 2 * math.ceil(4 * sigma) # smaller cutoff is possible for speed
@@ -476,15 +483,34 @@ def gabor_v2(image, theta_in_rad, wavelength = 10, gamma = 0.5):
 
     return gabor, mag, phase
 
+def gaborv2_and_create(image, theta_in_degree, label, lr, filename):
+
+    image = image.astype(float)
+
+    gabor, mag, phase = gabor_v2(image, theta_in_degree)
+
+    base = '/media/limalima/D/Database02'
+
+    # Source - https://stackoverflow.com/a/12517490
+    # Posted by Krumelur, modified by community. See post 'Timeline' for change history
+    # Retrieved 2026-05-10, License - CC BY-SA 4.0
+
+    filename = f"{base}/{label}-{lr}/{filename}-{theta_in_degree}.jpg"
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    cv2.imwrite(filename, gabor)
+    # with open(filename, "w") as f:
+    #     f.write("FOOBAR")
+
 #############################################################
 
 def get_coords(dataframe):
 
-    dataframe = pd.read_csv("db/CASIA-Iris-Thousand.csv")
+    # dataframe = pd.read_csv("db/CASIA-Iris-Thousand.csv")
 
-    for path_to_image in dataframe['NewPath']:
+    for path_to_image in dataframe['Img_Path']:
 
-        path_to_process = f'{PATH_DB}{path_to_image}'
+        path_to_process = path_to_image
         print(f'Getting coords for {path_to_process}')
 
         inference.get_coords_curl(path_to_process)

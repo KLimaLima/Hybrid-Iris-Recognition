@@ -1,10 +1,11 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout, BatchNormalization, Conv1D, Conv2D, MaxPooling1D, MaxPooling2D, GlobalAveragePooling2D
+from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate, Dropout, BatchNormalization, Conv1D, Conv2D, MaxPooling1D, MaxPooling2D, GlobalAveragePooling2D, Rescaling
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import CSVLogger, EarlyStopping
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.regularizers import l2
 from tensorflow import keras
+from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -510,7 +511,7 @@ class dmodel(kmodel):
 
         print(f'Finished training model {self.model_name}')
 
-class ABC01model(kmodel):
+class ABC01model(dmodel):
 
     def __init__(self):
         super().__init__()
@@ -548,6 +549,111 @@ class ABC01model(kmodel):
 
         # --- Model ---
         self.model = Model(inputs=[image_input, fd_input], outputs=output)
+
+data_augmentation_layers = [
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.3),
+    layers.RandomBrightness(0.3),
+    layers.RandomContrast(0.3),
+    layers.RandomGaussianBlur()
+]
+
+def data_augmentation(self, images):
+    for layer in data_augmentation_layers:
+        images = layer(images)
+    return images
+
+class modelv2(kmodel):
+
+    def __init__(self):
+        super().__init__()
+
+    def make_nn(self, gabor_shape, fd_shape, output_size):
+
+        if self.model is not None:
+            print('This model has already been made\nmethod terminated')
+            return
+        
+        image_input = Input(shape=gabor_shape, name='image_input')
+
+        x = data_augmentation(image_input)
+        x = Rescaling(1/255)(x)
+        x = Conv2D(32, (3,3), activation='relu')(x)
+        x = MaxPooling2D((2,2))(x)
+        x = Conv2D(64, (3,3), activation='relu')(x)
+        x = MaxPooling2D((2,2))(x)
+        x = Flatten()(x)
+        x = Dropout(0.5)(x)
+        x = Dense(128, activation='relu',kernel_regularizer=l2(0.001))(x)
+
+        # --- Structured data branch ---
+        fd_input = Input(shape=fd_shape, name="fd_input")
+
+        y = BatchNormalization()(fd_input)
+        y = Dense(64, activation='relu')(y)
+        y = BatchNormalization()(y)
+        y = Dense(32, activation='relu')(y)
+        y = Dropout(0.5)(y)
+
+        # --- Concatenate ---
+        combined = Concatenate()([x, y])
+
+        z = Dense(64, activation='relu')(combined)
+        z = Dropout(0.5)(z)
+        output = Dense(output_size, activation='softmax', name="my_output")(z)  # change depending on task
+
+        # --- Model ---
+        self.model = Model(inputs=[image_input, fd_input], outputs=output)
+
+    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor, my_fd, my_output):
+
+        self.make_nn(gabor_shape, fd_shape, output_size)
+        
+        keras.utils.plot_model(self.model, f"my_keras/{self.model_name}.png", show_shapes=True)
+
+        self.model.compile(
+            optimizer=self.optimizer,
+            loss=self.loss,
+            metrics=self.metrics
+        )
+
+        self.model.summary()
+
+        csv_logger = CSVLogger(f'my_keras/{self.model_name}.log', append=False)
+
+        early_stopper = EarlyStopping(monitor= 'val_loss', min_delta=1, patience=10, verbose=1, mode='min', start_from_epoch=75)
+
+        history = self.model.fit(
+            {"image_input": my_gabor, "fd_input": my_fd},
+            my_output,
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+            callbacks=[csv_logger],
+            verbose=2,
+            validation_split=self.validation_split,
+            shuffle=self.shuffle
+        )
+
+        self.model.save(f'my_keras/{self.model_name}.keras')
+
+        # summarize history for accuracy
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        print(f'Finished training model {self.model_name}')
 
 if __name__ == "__main__":
     pass
