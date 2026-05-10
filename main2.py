@@ -37,6 +37,7 @@ def prep_1(df):
 
     input_img_gabor = []
     input_fd = []
+    input_iris_code = []
     output_label = []
 
     for row in df.itertuples(index=False):
@@ -84,6 +85,7 @@ def prep_2(df):
     input_img_gabor2 = []
     input_img_gabor3 = []
     input_img_gabor4 = []
+    input_iris_code = []
     input_fd = []
     output_label = []
 
@@ -132,12 +134,14 @@ def prep_2(df):
 
         output_label.append(label)
         input_fd.append(fd_tuple)
+        input_iris_code.append(code_hist)
 
     input_img_gabor1 = np.array(input_img_gabor1)
     input_img_gabor2 = np.array(input_img_gabor2)
     input_img_gabor3 = np.array(input_img_gabor3)
     input_img_gabor4 = np.array(input_img_gabor4)
     input_fd = np.array(input_fd)
+    input_iris_code = np.array(input_iris_code)
     output_label = np.array(output_label)
 
     # return input_img_gabor, input_fd, label
@@ -147,6 +151,7 @@ def prep_2(df):
     np.save('input_img_gabor3.npy', input_img_gabor3)
     np.save('input_img_gabor4.npy', input_img_gabor4)
     np.save('input_fd.npy', input_fd)
+    np.save('input_iris.npy', input_iris_code)
     np.save('label.npy', output_label)
 
 def create_gabor_img(df):
