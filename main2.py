@@ -12,11 +12,11 @@ def main():
 
     df = df.query("Class_num <= 100")
 
-    temp = np.load('label.npy')
+    # temp = np.load('input_img_gabor.npy')
 
-    print(temp)
+    # print(temp.shape)
 
-    # prep_1(df)
+    prep_2(df)
 
     # print(df)
 
@@ -75,6 +75,77 @@ def prep_1(df):
     # return input_img_gabor, input_fd, label
 
     np.save('input_img_gabor.npy', input_img_gabor)
+    np.save('input_fd.npy', input_fd)
+    np.save('label.npy', output_label)
+
+def prep_2(df):
+
+    input_img_gabor1 = []
+    input_img_gabor2 = []
+    input_img_gabor3 = []
+    input_img_gabor4 = []
+    input_fd = []
+    output_label = []
+
+    for row in df.itertuples(index=False):
+
+        npz_file = np.load(row.NPZ_Path, allow_pickle=True)
+        code_hist = npz_file['code_hist_eq']
+
+        label = int(row.Class_num)
+        lr = row.Class_lr
+        if lr == 'L':
+            label += 100
+        elif lr != 'R':
+            print(f'lr is wrong for {row.Img_Path}')
+            exit()
+
+        fd_tuple = (row.fd_box_counting, row.fd_temporal_sampling, row.fd_corr_sum)
+
+        gabor, mag, phase = gabor_v2(code_hist, 0)
+        del gabor
+        del phase
+        cv2.imwrite('temp.jpg', mag)
+        input_img_gabor1.append(cv2.imread('temp.jpg'))
+        os.remove('temp.jpg')
+
+        gabor, mag, phase = gabor_v2(code_hist, 45)
+        del gabor
+        del phase
+        cv2.imwrite('temp.jpg', mag)
+        input_img_gabor2.append(cv2.imread('temp.jpg'))
+        os.remove('temp.jpg')
+
+        gabor, mag, phase = gabor_v2(code_hist, 90)
+        del gabor
+        del phase
+        cv2.imwrite('temp.jpg', mag)
+        input_img_gabor3.append(cv2.imread('temp.jpg'))
+        os.remove('temp.jpg')
+
+        gabor, mag, phase = gabor_v2(code_hist, 135)
+        del gabor
+        del phase
+        cv2.imwrite('temp.jpg', mag)
+        input_img_gabor4.append(cv2.imread('temp.jpg'))
+        os.remove('temp.jpg')
+
+        output_label.append(label)
+        input_fd.append(fd_tuple)
+
+    input_img_gabor1 = np.array(input_img_gabor1)
+    input_img_gabor2 = np.array(input_img_gabor2)
+    input_img_gabor3 = np.array(input_img_gabor3)
+    input_img_gabor4 = np.array(input_img_gabor4)
+    input_fd = np.array(input_fd)
+    output_label = np.array(output_label)
+
+    # return input_img_gabor, input_fd, label
+
+    np.save('input_img_gabor1.npy', input_img_gabor1)
+    np.save('input_img_gabor2.npy', input_img_gabor2)
+    np.save('input_img_gabor3.npy', input_img_gabor3)
+    np.save('input_img_gabor4.npy', input_img_gabor4)
     np.save('input_fd.npy', input_fd)
     np.save('label.npy', output_label)
 
