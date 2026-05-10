@@ -655,5 +655,74 @@ class modelv2(kmodel):
 
         print(f'Finished training model {self.model_name}')
 
+class modelv3(kmodel):
+
+    def __init__(self):
+        super().__init__()
+
+    def make_nn(self, gabor_shape, fd_shape, output_size):
+        
+        if self.model is not None:
+            print('This model has already been made\nmethod terminated')
+            return
+
+        gabor_input1 = Input(shape=gabor_shape, name="gabor_input_1")
+        gabor_input2 = Input(shape=gabor_shape, name="gabor_input_2")
+        gabor_input3 = Input(shape=gabor_shape, name="gabor_input_3")
+        gabor_input4 = Input(shape=gabor_shape, name="gabor_input_4")
+
+        x1 = data_augmentation(gabor_input1)
+        x1 = Rescaling(1/255)(x1)
+        x1 = Conv2D(8, (3,3), activation='relu')(x1)
+        x1 = MaxPooling2D((2,2))(x1)
+        x1 = BatchNormalization()(x1)
+        x1 = Flatten()(x1)
+        x1 = Dense(8, activation='relu')(x1)
+        x1 = BatchNormalization()(x1)
+
+        x2 = data_augmentation(gabor_input2)
+        x2 = Rescaling(1/255)(x2)
+        x2 = Conv2D(8, (3,3), activation='relu')(x2)
+        x2 = MaxPooling2D((2,2))(x2)
+        x2 = BatchNormalization()(x2)
+        x2= Flatten()(x2)
+        x2 = Dense(8, activation='relu')(x2)
+        x2 = BatchNormalization()(x2)
+
+        x3 = data_augmentation(gabor_input3)
+        x3 = Rescaling(1/255)(x3)
+        x3 = Conv2D(8, (3,3), activation='relu')(x3)
+        x3 = MaxPooling2D((2,2))(x3)
+        x3 = BatchNormalization()(x3)
+        x3 = Flatten()(x3)
+        x3 = Dense(8, activation='relu')(x3)
+        x3 = BatchNormalization()(x3)
+
+        x4 = data_augmentation(gabor_input4)
+        x4 = Rescaling(1/255)(x4)
+        x4 = Conv2D(8, (3,3), activation='relu')(x4)
+        x4 = MaxPooling2D((2,2))(x4)
+        x4 = BatchNormalization()(x4)
+        x4 = Flatten()(x4)
+        x4 = Dense(8, activation='relu')(x4)
+        x4 = BatchNormalization()(x4)
+
+        # --- Structured data branch ---
+        fd_input = Input(shape=fd_shape, name="fd_input")
+
+        y = BatchNormalization()(fd_input)
+        y = Dense(8, activation='relu')(y)
+        y = BatchNormalization()(y)
+
+        # --- Concatenate ---
+        combined = Concatenate()([x1,x2,x3,x4, y])
+
+        z = Dense(8, activation='relu')(combined)
+        z = Dropout(0.5)(z)
+        output = Dense(output_size, activation='softmax', name="my_output")(z)  # change depending on task
+
+        # --- Model ---
+        self.model = Model(inputs=[gabor_input1, gabor_input2, gabor_input3, gabor_input4, fd_input], outputs=output)
+
 if __name__ == "__main__":
     pass
