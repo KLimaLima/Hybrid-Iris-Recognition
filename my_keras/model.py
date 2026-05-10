@@ -558,7 +558,7 @@ data_augmentation_layers = [
     layers.RandomGaussianBlur()
 ]
 
-def data_augmentation(self, images):
+def data_augmentation(images):
     for layer in data_augmentation_layers:
         images = layer(images)
     return images
