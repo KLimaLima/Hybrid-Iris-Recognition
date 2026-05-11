@@ -108,7 +108,7 @@ class kmodel():
         plt.show()
 
         plt.plot(history.history['true_positives_1'])
-        plt.plot(history.history['val_true_positives_1'])
+        plt.plot(history.history['val_true_positives'])
         plt.title('model True Positives')
         plt.ylabel('true positive')
         plt.xlabel('epoch')
@@ -116,7 +116,7 @@ class kmodel():
         plt.show()
 
         plt.plot(history.history['false_positives_1'])
-        plt.plot(history.history['val_false_positives_1'])
+        plt.plot(history.history['val_false_positives'])
         plt.title('model False Positives')
         plt.ylabel('false positive')
         plt.xlabel('epoch')
