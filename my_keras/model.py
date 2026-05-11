@@ -107,7 +107,7 @@ class kmodel():
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
 
-        plt.plot(history.history['true_positives_1'])
+        plt.plot(history.history['true_positives'])
         plt.plot(history.history['val_true_positives'])
         plt.title('model True Positives')
         plt.ylabel('true positive')
@@ -115,7 +115,7 @@ class kmodel():
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
 
-        plt.plot(history.history['false_positives_1'])
+        plt.plot(history.history['false_positives'])
         plt.plot(history.history['val_false_positives'])
         plt.title('model False Positives')
         plt.ylabel('false positive')
