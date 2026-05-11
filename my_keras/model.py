@@ -476,7 +476,7 @@ class dmodel(kmodel):
         # --- Model ---
         self.model = Model(inputs=[image_input, fd_input], outputs=output)
 
-    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor1, my_gabor2 = None, my_gabor3 = None, my_gabor4 = None, my_fd = None, my_output =None):
+    def make_model(self, gabor_shape, fd_shape, output_size, my_gabor1, my_fd, my_output):
 
         self.make_nn(gabor_shape, fd_shape, output_size)
         
@@ -509,8 +509,8 @@ class dmodel(kmodel):
         self.model.save(f'my_keras/{self.model_name}.keras')
 
         # summarize history for accuracy
-        plt.plot(history.history['accuracy'])
-        plt.plot(history.history['val_accuracy'])
+        plt.plot(history.history['categorical_accuracy'])
+        plt.plot(history.history['val_categorical_accuracy'])
         plt.title('model accuracy')
         plt.ylabel('accuracy')
         plt.xlabel('epoch')
@@ -521,6 +521,22 @@ class dmodel(kmodel):
         plt.plot(history.history['val_loss'])
         plt.title('model loss')
         plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        plt.plot(history.history['true_positives'])
+        plt.plot(history.history['val_true_positives'])
+        plt.title('model True Positives')
+        plt.ylabel('true positive')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        plt.plot(history.history['false_positives'])
+        plt.plot(history.history['val_false_positives'])
+        plt.title('model False Positives')
+        plt.ylabel('false positive')
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
