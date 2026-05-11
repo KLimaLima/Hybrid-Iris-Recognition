@@ -10,7 +10,7 @@ def main():
 
     df = pd.read_csv("db/CASIA-Iris-Thousandv2.csv")
 
-    df = df.query("Class_num <= 100")
+    df = df.query("Class_num <= 700")
 
     # temp = np.load('input_img_gabor.npy')
 
@@ -132,9 +132,13 @@ def prep_2(df):
         input_img_gabor4.append(cv2.imread('temp.jpg'))
         os.remove('temp.jpg')
 
+        cv2.imwrite('temp.jpg', code_hist)
+        input_iris_code.append(cv2.imread('temp.jpg'))
+        os.remove('temp.jpg')
+
         output_label.append(label)
         input_fd.append(fd_tuple)
-        input_iris_code.append(code_hist)
+        # input_iris_code.append(code_hist)
 
     input_img_gabor1 = np.array(input_img_gabor1)
     input_img_gabor2 = np.array(input_img_gabor2)
